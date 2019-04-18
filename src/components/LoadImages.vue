@@ -4,7 +4,7 @@
     >
     <span>
       <button>
-        <Logo />
+        <ImageIcon />
         Click to add images to resize
       </button>
       <input type="file"
@@ -19,48 +19,13 @@
 </template>
 
 <script>
-import Logo from '../assets/image.svg';
-
-function formatBytes(bytes, decimals) {
-  // https://stackoverflow.com/a/18650828
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const dm = decimals <= 0 ? 0 : decimals || 2;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-  return `${parseFloat((bytes / (k ** i)).toFixed(dm))} ${sizes[i]}`;
-}
-
-function createImageObject(file) {
-  const obj = {};
-
-  obj.name = file.name;
-  obj.type = file.type;
-  obj.size = formatBytes(file.size);
-
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const dimension = `${img.width}x${img.height}`;
-        obj.dimension = dimension;
-        obj.image = img;
-
-        resolve(obj);
-      };
-      img.src = event.target.result;
-    };
-
-    reader.readAsDataURL(file);
-  });
-}
+import ImageIcon from '../assets/imageIcon.svg';
+import { createImageObject } from '../utils';
 
 export default {
   name: 'LoadImages',
   components: {
-    Logo,
+    ImageIcon,
   },
   data() {
     return {

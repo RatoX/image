@@ -1,7 +1,7 @@
 <template>
-  <section>
-    <span>
-      <h1>
+  <section class="resize-images">
+    <span class="resize-images__span">
+      <h1 class="resize-images__title">
         Reduce {{ listSize }} image(s) in
         <output>{{ reducePercent }}</output>% of original dimensions
       </h1>
@@ -21,12 +21,13 @@
       {{ reduceActionLabel }}
     </button>
 
+    <ListImages />
   </section>
 </template>
 
 <script>
 import Pica from 'pica';
-import { saveAs } from 'file-saver';
+import ListImages from './ListImages.vue';
 
 const pica = Pica();
 
@@ -45,24 +46,6 @@ function createCanvas(reducePercent, obj) {
   return canvas;
 }
 
-function extractExtension(text) {
-  const arr = text.split('.');
-  const extension = arr.pop();
-  const filename = arr.join();
-
-  return [filename, extension];
-}
-
-function slugify(text) {
-  // https://gist.github.com/mathewbyrne/1280286
-  return text.toString().toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w-]+/g, '')
-    .replace(/--+/g, '-')
-    .replace(/^-+/, '')
-    .replace(/-+$/, '');
-}
-
 function resizeWithPica(reducePercent, obj) {
   const canvas = createCanvas(reducePercent, obj);
   document.body.appendChild(canvas);
@@ -73,14 +56,9 @@ function resizeWithPica(reducePercent, obj) {
       unsharpRadius: 0.6,
       unsharpThreshold: 2,
     })
-    .then(result => pica.toBlob(result, obj.type))
     .then((result) => {
-      const [filename, extension] = extractExtension(obj.name);
-      const newFilename = `${slugify(filename)}.${extension}`;
-
-      saveAs(result, newFilename);
-
       document.body.removeChild(canvas);
+      return result;
     });
 }
 
@@ -92,6 +70,10 @@ export default {
       reducePercent: 90,
       isResizing: false,
     };
+  },
+
+  components: {
+    ListImages,
   },
 
   computed: {
@@ -114,7 +96,10 @@ export default {
 
       const promises = this.$store
         .state.images.list
-        .map(resizeWithPica.bind(null, this.reducePercent));
+        .map((image, index) => {
+          const resizePromise = resizeWithPica(this.reducePercent, image);
+          return resizePromise.then(canvas => this.$store.dispatch('images/updateImageResized', { canvas, index }));
+        });
 
       Promise
         .all(promises)
@@ -128,7 +113,7 @@ export default {
 
 <style scoped>
 
-section {
+.resize-images {
   display: flex;
   justify-content: space-evenly;
   align-items: center;
@@ -137,15 +122,12 @@ section {
   min-height: 100vh;
 }
 
-h1 {
+.resize-images__title {
   font-size: 1em;
   text-align: center;
 }
 
-button {
-}
-
-span {
+.resize-images__span {
   display: flex;
   flex-direction: column;
   padding: 0 20px;

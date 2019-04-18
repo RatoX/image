@@ -11,12 +11,20 @@ const images = {
   },
   mutations: {
     setList(state, { list }) {
-      state.list = list;
+      state.list = list.map(l => ({ ...l, canvas: null }));
+    },
+
+    setCanvas(state, { canvas, index }) {
+      state.list[index].canvas = canvas;
     },
   },
   actions: {
     init({ commit }, list) {
       commit('setList', { list });
+    },
+
+    updateImageResized({ commit }, { canvas, index }) {
+      commit('setCanvas', { canvas, index });
     },
   },
   getters: { },
